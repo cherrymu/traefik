@@ -5,7 +5,7 @@ description: "Learn how to create a certificate with the Let's Encrypt HTTP chal
 
 # Docker-compose with Let's Encrypt : HTTP Challenge
 
-This guide aim to demonstrate how to create a certificate with the Let's Encrypt HTTP challenge to use https on a simple service exposed with Traefik.  
+This guide aims to demonstrate how to create a certificate with the Let's Encrypt HTTP challenge to use https on a simple service exposed with Traefik.  
 Please also read the [basic example](../basic-example) for details on how to expose such a service.  
 
 ## Prerequisite
@@ -32,7 +32,7 @@ For the HTTP challenge you will need:
 	#- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
 	```
 
-- Run `docker-compose up -d` within the folder where you created the previous file.
+- Run `docker compose up -d` within the folder where you created the previous file.
 - Wait a bit and visit `https://your_own_domain` to confirm everything went fine.
 
 !!! Note
@@ -50,7 +50,7 @@ What changed between the basic example:
 ```yaml
 command:
   # Traefik will listen to incoming request on the port 443 (https)
-  - "--entrypoints.websecure.address=:443"
+  - "--entryPoints.websecure.address=:443"
 ports:
   - "443:443"
 ```

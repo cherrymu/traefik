@@ -34,13 +34,14 @@ type Options struct {
 func (o *Options) SetDefaults() {
 	// ensure http2 enabled
 	o.ALPNProtocols = DefaultTLSOptions.ALPNProtocols
+	o.CipherSuites = DefaultTLSOptions.CipherSuites
 }
 
 // +k8s:deepcopy-gen=true
 
 // Store holds the options for a given Store.
 type Store struct {
-	DefaultCertificate   *Certificate   `json:"defaultCertificate,omitempty" toml:"defaultCertificate,omitempty" yaml:"defaultCertificate,omitempty" export:"true"`
+	DefaultCertificate   *Certificate   `json:"defaultCertificate,omitempty" toml:"defaultCertificate,omitempty" yaml:"defaultCertificate,omitempty" label:"-" export:"true"`
 	DefaultGeneratedCert *GeneratedCert `json:"defaultGeneratedCert,omitempty" toml:"defaultGeneratedCert,omitempty" yaml:"defaultGeneratedCert,omitempty" export:"true"`
 }
 

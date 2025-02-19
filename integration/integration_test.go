@@ -36,9 +36,10 @@ import (
 )
 
 var (
-	showLog               = flag.Bool("tlog", false, "always show Traefik logs")
-	k8sConformance        = flag.Bool("k8sConformance", false, "run K8s Gateway API conformance test")
-	k8sConformanceRunTest = flag.String("k8sConformanceRunTest", "", "run a specific K8s Gateway API conformance test")
+	showLog                      = flag.Bool("tlog", false, "always show Traefik logs")
+	k8sConformance               = flag.Bool("k8sConformance", false, "run K8s Gateway API conformance test")
+	k8sConformanceRunTest        = flag.String("k8sConformanceRunTest", "", "run a specific K8s Gateway API conformance test")
+	k8sConformanceTraefikVersion = flag.String("k8sConformanceTraefikVersion", "dev", "specify the Traefik version for the K8s Gateway API conformance report")
 )
 
 const tailscaleSecretFilePath = "tailscale.secret"
@@ -243,7 +244,7 @@ func (s *BaseSuite) createComposeProject(name string) {
 		}
 
 		if containerConfig.Deploy.Replicas > 0 {
-			for i := 0; i < containerConfig.Deploy.Replicas; i++ {
+			for i := range containerConfig.Deploy.Replicas {
 				id = fmt.Sprintf("%s-%d", id, i+1)
 				con, err := s.createContainer(ctx, containerConfig, id, mounts)
 				require.NoError(s.T(), err)

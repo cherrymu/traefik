@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -14,9 +15,9 @@ import (
 	"github.com/traefik/traefik/v3/pkg/metrics"
 	"github.com/traefik/traefik/v3/pkg/middlewares"
 	"github.com/traefik/traefik/v3/pkg/middlewares/capture"
+	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
 	"github.com/traefik/traefik/v3/pkg/middlewares/retry"
 	traefiktls "github.com/traefik/traefik/v3/pkg/tls"
-	"github.com/traefik/traefik/v3/pkg/tracing"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 )
@@ -118,6 +119,11 @@ func (m *metricsMiddleware) GetTracingInformation() (string, string, trace.SpanK
 }
 
 func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if val := req.Context().Value(observability.DisableMetricsKey); val != nil {
+		m.next.ServeHTTP(rw, req)
+		return
+	}
+
 	proto := getRequestProtocol(req)
 
 	var labels []string
@@ -144,7 +150,7 @@ func (m *metricsMiddleware) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		}
 		logger := with.Logger()
 		logger.Error().Err(err).Msg("Could not get Capture")
-		tracing.SetStatusErrorf(req.Context(), "Could not get Capture")
+		observability.SetStatusErrorf(req.Context(), "Could not get Capture")
 		return
 	}
 
@@ -216,12 +222,10 @@ func grpcStatusCode(rw http.ResponseWriter) int {
 
 func containsHeader(req *http.Request, name, value string) bool {
 	items := strings.Split(req.Header.Get(name), ",")
-	for _, item := range items {
-		if value == strings.ToLower(strings.TrimSpace(item)) {
-			return true
-		}
-	}
-	return false
+
+	return slices.ContainsFunc(items, func(item string) bool {
+		return value == strings.ToLower(strings.TrimSpace(item))
+	})
 }
 
 // getMethod returns the request's method.

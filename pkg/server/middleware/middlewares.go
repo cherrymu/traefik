@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/containous/alice"
@@ -19,11 +20,15 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/compress"
 	"github.com/traefik/traefik/v3/pkg/middlewares/contenttype"
 	"github.com/traefik/traefik/v3/pkg/middlewares/customerrors"
+	"github.com/traefik/traefik/v3/pkg/middlewares/gatewayapi/headermodifier"
+	gapiredirect "github.com/traefik/traefik/v3/pkg/middlewares/gatewayapi/redirect"
+	"github.com/traefik/traefik/v3/pkg/middlewares/gatewayapi/urlrewrite"
 	"github.com/traefik/traefik/v3/pkg/middlewares/grpcweb"
 	"github.com/traefik/traefik/v3/pkg/middlewares/headers"
 	"github.com/traefik/traefik/v3/pkg/middlewares/inflightreq"
 	"github.com/traefik/traefik/v3/pkg/middlewares/ipallowlist"
 	"github.com/traefik/traefik/v3/pkg/middlewares/ipwhitelist"
+	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
 	"github.com/traefik/traefik/v3/pkg/middlewares/passtlsclientcert"
 	"github.com/traefik/traefik/v3/pkg/middlewares/ratelimiter"
 	"github.com/traefik/traefik/v3/pkg/middlewares/redirect"
@@ -32,7 +37,6 @@ import (
 	"github.com/traefik/traefik/v3/pkg/middlewares/retry"
 	"github.com/traefik/traefik/v3/pkg/middlewares/stripprefix"
 	"github.com/traefik/traefik/v3/pkg/middlewares/stripprefixregex"
-	"github.com/traefik/traefik/v3/pkg/middlewares/tracing"
 	"github.com/traefik/traefik/v3/pkg/server/provider"
 )
 
@@ -99,7 +103,7 @@ func checkRecursion(ctx context.Context, middlewareName string) (context.Context
 	if !ok {
 		currentStack = []string{}
 	}
-	if inSlice(middlewareName, currentStack) {
+	if slices.Contains(currentStack, middlewareName) {
 		return ctx, fmt.Errorf("could not instantiate middleware %s: recursion detected in %s", middlewareName, strings.Join(append(currentStack, middlewareName), "->"))
 	}
 	return context.WithValue(ctx, middlewareStackKey, append(currentStack, middlewareName)), nil
@@ -383,6 +387,43 @@ func (b *Builder) buildConstructor(ctx context.Context, middlewareName string) (
 		}
 	}
 
+	// Gateway API HTTPRoute filters middlewares.
+	if config.RequestHeaderModifier != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+		middleware = func(next http.Handler) (http.Handler, error) {
+			return headermodifier.NewRequestHeaderModifier(ctx, next, *config.RequestHeaderModifier, middlewareName), nil
+		}
+	}
+
+	if config.ResponseHeaderModifier != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+		middleware = func(next http.Handler) (http.Handler, error) {
+			return headermodifier.NewResponseHeaderModifier(ctx, next, *config.ResponseHeaderModifier, middlewareName), nil
+		}
+	}
+
+	if config.RequestRedirect != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+		middleware = func(next http.Handler) (http.Handler, error) {
+			return gapiredirect.NewRequestRedirect(ctx, next, *config.RequestRedirect, middlewareName)
+		}
+	}
+
+	if config.URLRewrite != nil {
+		if middleware != nil {
+			return nil, badConf
+		}
+		middleware = func(next http.Handler) (http.Handler, error) {
+			return urlrewrite.NewURLRewrite(ctx, next, *config.URLRewrite, middlewareName), nil
+		}
+	}
+
 	if middleware == nil {
 		return nil, fmt.Errorf("invalid middleware %q configuration: invalid middleware type or middleware does not exist", middlewareName)
 	}
@@ -390,14 +431,5 @@ func (b *Builder) buildConstructor(ctx context.Context, middlewareName string) (
 	// The tracing middleware is a NOOP if tracing is not setup on the middleware chain.
 	// Hence, regarding internal resources' observability deactivation,
 	// this would not enable tracing.
-	return tracing.WrapMiddleware(ctx, middleware), nil
-}
-
-func inSlice(element string, stack []string) bool {
-	for _, value := range stack {
-		if value == element {
-			return true
-		}
-	}
-	return false
+	return observability.WrapMiddleware(ctx, middleware), nil
 }

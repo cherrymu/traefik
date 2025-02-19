@@ -14,7 +14,7 @@ jobs:
 
   docs:
     name: Doc Process
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     if: github.repository == 'traefik/traefik'
 
     steps:
@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}

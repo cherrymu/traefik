@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"io"
 	stdlog "log"
+	"maps"
 	"net/http"
 	"os"
 	"os/signal"
-	"sort"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/coreos/go-systemd/daemon"
+	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/go-acme/lego/v4/challenge"
 	gokitmetrics "github.com/go-kit/kit/metrics"
 	"github.com/rs/zerolog/log"
@@ -25,6 +26,7 @@ import (
 	"github.com/traefik/traefik/v3/cmd"
 	"github.com/traefik/traefik/v3/cmd/healthcheck"
 	cmdVersion "github.com/traefik/traefik/v3/cmd/version"
+	_ "github.com/traefik/traefik/v3/init"
 	tcli "github.com/traefik/traefik/v3/pkg/cli"
 	"github.com/traefik/traefik/v3/pkg/collector"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
@@ -37,6 +39,8 @@ import (
 	"github.com/traefik/traefik/v3/pkg/provider/aggregator"
 	"github.com/traefik/traefik/v3/pkg/provider/tailscale"
 	"github.com/traefik/traefik/v3/pkg/provider/traefik"
+	"github.com/traefik/traefik/v3/pkg/proxy"
+	"github.com/traefik/traefik/v3/pkg/proxy/httputil"
 	"github.com/traefik/traefik/v3/pkg/safe"
 	"github.com/traefik/traefik/v3/pkg/server"
 	"github.com/traefik/traefik/v3/pkg/server/middleware"
@@ -46,7 +50,6 @@ import (
 	"github.com/traefik/traefik/v3/pkg/tracing"
 	"github.com/traefik/traefik/v3/pkg/types"
 	"github.com/traefik/traefik/v3/pkg/version"
-	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -88,7 +91,9 @@ Complete documentation is available at https://traefik.io`,
 }
 
 func runCmd(staticConfiguration *static.Configuration) error {
-	setupLogger(staticConfiguration)
+	if err := setupLogger(staticConfiguration); err != nil {
+		return fmt.Errorf("setting up logger: %w", err)
+	}
 
 	http.DefaultTransport.(*http.Transport).Proxy = http.ProxyFromEnvironment
 
@@ -187,19 +192,26 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 		return nil, err
 	}
 
-	acmeProviders := initACMEProvider(staticConfiguration, &providerAggregator, tlsManager, httpChallengeProvider, tlsChallengeProvider)
+	acmeProviders := initACMEProvider(staticConfiguration, providerAggregator, tlsManager, httpChallengeProvider, tlsChallengeProvider, routinesPool)
 
 	// Tailscale
 
-	tsProviders := initTailscaleProviders(staticConfiguration, &providerAggregator)
+	tsProviders := initTailscaleProviders(staticConfiguration, providerAggregator)
 
 	// Observability
 
 	metricRegistries := registerMetricClients(staticConfiguration.Metrics)
+	var semConvMetricRegistry *metrics.SemConvMetricsRegistry
+	if staticConfiguration.Metrics != nil && staticConfiguration.Metrics.OTLP != nil {
+		semConvMetricRegistry, err = metrics.NewSemConvMetricRegistry(ctx, staticConfiguration.Metrics.OTLP)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create SemConv metric registry: %w", err)
+		}
+	}
 	metricsRegistry := metrics.NewMultiRegistry(metricRegistries)
 	accessLog := setupAccessLog(staticConfiguration.AccessLog)
 	tracer, tracerCloser := setupTracing(staticConfiguration.Tracing)
-	observabilityMgr := middleware.NewObservabilityMgr(*staticConfiguration, metricsRegistry, accessLog, tracer, tracerCloser)
+	observabilityMgr := middleware.NewObservabilityMgr(*staticConfiguration, metricsRegistry, semConvMetricRegistry, accessLog, tracer, tracerCloser)
 
 	// Entrypoints
 
@@ -218,10 +230,24 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 	}
 
 	// Plugins
+	pluginLogger := log.Ctx(ctx).With().Logger()
+	hasPlugins := staticConfiguration.Experimental != nil && (staticConfiguration.Experimental.Plugins != nil || staticConfiguration.Experimental.LocalPlugins != nil)
+	if hasPlugins {
+		pluginsList := slices.Collect(maps.Keys(staticConfiguration.Experimental.Plugins))
+		pluginsList = append(pluginsList, slices.Collect(maps.Keys(staticConfiguration.Experimental.LocalPlugins))...)
+
+		pluginLogger = pluginLogger.With().Strs("plugins", pluginsList).Logger()
+		pluginLogger.Info().Msg("Loading plugins...")
+	}
 
 	pluginBuilder, err := createPluginBuilder(staticConfiguration)
+	if err != nil && staticConfiguration.Experimental != nil && staticConfiguration.Experimental.AbortOnPluginFailure {
+		return nil, fmt.Errorf("plugin: failed to create plugin builder: %w", err)
+	}
 	if err != nil {
-		log.Error().Err(err).Msg("Plugins are disabled because an error has occurred.")
+		pluginLogger.Err(err).Msg("Plugins are disabled because an error has occurred.")
+	} else if hasPlugins {
+		pluginLogger.Info().Msg("Plugins loaded.")
 	}
 
 	// Providers plugins
@@ -263,10 +289,16 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 		log.Info().Msg("Successfully obtained SPIFFE SVID.")
 	}
 
-	roundTripperManager := service.NewRoundTripperManager(spiffeX509Source)
+	transportManager := service.NewTransportManager(spiffeX509Source)
+
+	var proxyBuilder service.ProxyBuilder = httputil.NewProxyBuilder(transportManager, semConvMetricRegistry)
+	if staticConfiguration.Experimental != nil && staticConfiguration.Experimental.FastProxy != nil {
+		proxyBuilder = proxy.NewSmartBuilder(transportManager, proxyBuilder, *staticConfiguration.Experimental.FastProxy)
+	}
+
 	dialerManager := tcp.NewDialerManager(spiffeX509Source)
 	acmeHTTPHandler := getHTTPChallengeHandler(acmeProviders, httpChallengeProvider)
-	managerFactory := service.NewManagerFactory(*staticConfiguration, routinesPool, observabilityMgr, roundTripperManager, acmeHTTPHandler)
+	managerFactory := service.NewManagerFactory(*staticConfiguration, routinesPool, observabilityMgr, transportManager, proxyBuilder, acmeHTTPHandler)
 
 	// Router factory
 
@@ -300,7 +332,8 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 	// Server Transports
 	watcher.AddListener(func(conf dynamic.Configuration) {
-		roundTripperManager.Update(conf.HTTP.ServersTransports)
+		transportManager.Update(conf.HTTP.ServersTransports)
+		proxyBuilder.Update(conf.HTTP.ServersTransports)
 		dialerManager.Update(conf.TCP.ServersTransports)
 	})
 
@@ -346,7 +379,7 @@ func setupServer(staticConfiguration *static.Configuration) (*server.Server, err
 
 			if _, ok := resolverNames[rt.TLS.CertResolver]; !ok {
 				log.Error().Err(err).Str(logs.RouterName, rtName).Str("certificateResolver", rt.TLS.CertResolver).
-					Msg("Router uses a non-existent certificate resolver")
+					Msg("Router uses a nonexistent certificate resolver")
 			}
 		}
 	})
@@ -395,7 +428,7 @@ func getDefaultsEntrypoints(staticConfiguration *static.Configuration) []string 
 		}
 	}
 
-	sort.Strings(defaultEntryPoints)
+	slices.Sort(defaultEntryPoints)
 	return defaultEntryPoints
 }
 
@@ -411,7 +444,7 @@ func switchRouter(routerFactory *server.RouterFactory, serverEntryPointsTCP serv
 }
 
 // initACMEProvider creates and registers acme.Provider instances corresponding to the configured ACME certificate resolvers.
-func initACMEProvider(c *static.Configuration, providerAggregator *aggregator.ProviderAggregator, tlsManager *traefiktls.Manager, httpChallengeProvider, tlsChallengeProvider challenge.Provider) []*acme.Provider {
+func initACMEProvider(c *static.Configuration, providerAggregator *aggregator.ProviderAggregator, tlsManager *traefiktls.Manager, httpChallengeProvider, tlsChallengeProvider challenge.Provider, routinesPool *safe.Pool) []*acme.Provider {
 	localStores := map[string]*acme.LocalStore{}
 
 	var resolvers []*acme.Provider
@@ -421,7 +454,7 @@ func initACMEProvider(c *static.Configuration, providerAggregator *aggregator.Pr
 		}
 
 		if localStores[resolver.ACME.Storage] == nil {
-			localStores[resolver.ACME.Storage] = acme.NewLocalStore(resolver.ACME.Storage)
+			localStores[resolver.ACME.Storage] = acme.NewLocalStore(resolver.ACME.Storage, routinesPool)
 		}
 
 		p := &acme.Provider{
@@ -536,7 +569,7 @@ func registerMetricClients(metricsConfig *types.Metrics) []metrics.Registry {
 }
 
 func appendCertMetric(gauge gokitmetrics.Gauge, certificate *x509.Certificate) {
-	sort.Strings(certificate.DNSNames)
+	slices.Sort(certificate.DNSNames)
 
 	labels := []string{
 		"cn", certificate.Subject.CommonName,
@@ -563,7 +596,7 @@ func setupAccessLog(conf *types.AccessLog) *accesslog.Handler {
 	return accessLoggerMiddleware
 }
 
-func setupTracing(conf *static.Tracing) (trace.Tracer, io.Closer) {
+func setupTracing(conf *static.Tracing) (*tracing.Tracer, io.Closer) {
 	if conf == nil {
 		return nil, nil
 	}
@@ -587,16 +620,16 @@ func checkNewVersion() {
 }
 
 func stats(staticConfiguration *static.Configuration) {
-	logger := log.Info()
+	logger := log.With().Logger()
 
 	if staticConfiguration.Global.SendAnonymousUsage {
-		logger.Msg(`Stats collection is enabled.`)
-		logger.Msg(`Many thanks for contributing to Traefik's improvement by allowing us to receive anonymous information from your configuration.`)
-		logger.Msg(`Help us improve Traefik by leaving this feature on :)`)
-		logger.Msg(`More details on: https://doc.traefik.io/traefik/contributing/data-collection/`)
+		logger.Info().Msg(`Stats collection is enabled.`)
+		logger.Info().Msg(`Many thanks for contributing to Traefik's improvement by allowing us to receive anonymous information from your configuration.`)
+		logger.Info().Msg(`Help us improve Traefik by leaving this feature on :)`)
+		logger.Info().Msg(`More details on: https://doc.traefik.io/traefik/contributing/data-collection/`)
 		collect(staticConfiguration)
 	} else {
-		logger.Msg(`
+		logger.Info().Msg(`
 Stats collection is disabled.
 Help us improve Traefik by turning this feature on :)
 More details on: https://doc.traefik.io/traefik/contributing/data-collection/

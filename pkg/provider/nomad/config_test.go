@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	ptypes "github.com/traefik/paerser/types"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
+	"github.com/traefik/traefik/v3/pkg/tls"
+	"github.com/traefik/traefik/v3/pkg/types"
 )
 
 func Test_defaultRule(t *testing.T) {
@@ -59,7 +61,7 @@ func Test_defaultRule(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -67,6 +69,9 @@ func Test_defaultRule(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -114,7 +119,7 @@ func Test_defaultRule(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -122,6 +127,9 @@ func Test_defaultRule(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -160,7 +168,7 @@ func Test_defaultRule(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -168,6 +176,9 @@ func Test_defaultRule(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -212,7 +223,7 @@ func Test_defaultRule(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -220,6 +231,9 @@ func Test_defaultRule(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -287,7 +301,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -295,6 +309,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -351,7 +368,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://192.168.1.101:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -364,7 +381,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://192.168.1.102:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -372,6 +389,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -428,7 +448,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -436,6 +456,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -489,7 +512,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -497,6 +520,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -553,7 +579,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -561,6 +587,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -606,7 +635,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -614,6 +643,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -660,7 +692,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -668,6 +700,45 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "empty service",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.enable=true",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -706,7 +777,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -720,6 +791,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -765,7 +839,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -773,6 +847,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -814,7 +891,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -827,7 +904,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -835,6 +912,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -884,6 +964,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -944,6 +1027,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1001,7 +1087,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1009,6 +1095,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1053,7 +1142,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1068,6 +1157,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1132,7 +1224,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1140,6 +1232,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1198,7 +1293,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1206,6 +1301,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1258,7 +1356,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1266,6 +1364,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1323,7 +1424,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1331,6 +1432,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1376,7 +1480,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1384,6 +1488,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1430,7 +1537,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "h2c://127.0.0.1:8080",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1438,6 +1545,197 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "one service with label url",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.http.services.Service1.LoadBalancer.server.url = http://1.2.3.4:5678",
+					},
+					Address:   "127.0.0.1",
+					Port:      9999,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers: map[string]*dynamic.Router{
+						"Test": {
+							Service:     "Service1",
+							Rule:        "Host(`Test.traefik.test`)",
+							DefaultRule: true,
+						},
+					},
+					Middlewares: map[string]*dynamic.Middleware{},
+					Services: map[string]*dynamic.Service{
+						"Service1": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers: []dynamic.Server{
+									{
+										URL: "http://1.2.3.4:5678",
+									},
+								},
+								PassHostHeader: pointer(true),
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: ptypes.Duration(100 * time.Millisecond),
+								},
+							},
+						},
+					},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "one service with label url and preserve path",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.http.services.Service1.LoadBalancer.server.url = http://1.2.3.4:5678",
+						"traefik.http.services.Service1.LoadBalancer.server.preservepath = true",
+					},
+					Address:   "127.0.0.1",
+					Port:      9999,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers: map[string]*dynamic.Router{
+						"Test": {
+							Service:     "Service1",
+							Rule:        "Host(`Test.traefik.test`)",
+							DefaultRule: true,
+						},
+					},
+					Middlewares: map[string]*dynamic.Middleware{},
+					Services: map[string]*dynamic.Service{
+						"Service1": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers: []dynamic.Server{
+									{
+										URL:          "http://1.2.3.4:5678",
+										PreservePath: true,
+									},
+								},
+								PassHostHeader: pointer(true),
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: ptypes.Duration(100 * time.Millisecond),
+								},
+							},
+						},
+					},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "one service with label url and port",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.http.services.Service1.LoadBalancer.server.url = http://1.2.3.4:5678",
+						"traefik.http.services.Service1.LoadBalancer.server.port = 1234",
+					},
+					Address:   "127.0.0.1",
+					Port:      9999,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "one service with label url and scheme",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.http.services.Service1.LoadBalancer.server.url = http://1.2.3.4:5678",
+						"traefik.http.services.Service1.LoadBalancer.server.scheme = https",
+					},
+					Address:   "127.0.0.1",
+					Port:      9999,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1478,7 +1776,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1491,7 +1789,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:8080",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1499,6 +1797,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1531,6 +1832,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1562,6 +1866,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1596,6 +1903,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1629,6 +1939,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1675,7 +1988,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1683,6 +1996,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1739,7 +2055,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -1747,6 +2063,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1805,6 +2124,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1855,6 +2177,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1903,6 +2228,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -1945,6 +2273,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -1999,6 +2330,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -2047,6 +2381,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2130,7 +2467,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -2138,6 +2475,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2218,7 +2558,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:9999",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -2226,6 +2566,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2270,6 +2613,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -2312,6 +2658,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2356,6 +2705,9 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2423,7 +2775,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.1:80",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -2436,7 +2788,7 @@ func Test_buildConfig(t *testing.T) {
 										URL: "http://127.0.0.2:80",
 									},
 								},
-								PassHostHeader: Bool(true),
+								PassHostHeader: pointer(true),
 								ResponseForwarding: &dynamic.ResponseForwarding{
 									FlushInterval: ptypes.Duration(100 * time.Millisecond),
 								},
@@ -2444,6 +2796,9 @@ func Test_buildConfig(t *testing.T) {
 						},
 					},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2522,6 +2877,9 @@ func Test_buildConfig(t *testing.T) {
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
 				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
 			},
 		},
 		{
@@ -2598,6 +2956,379 @@ func Test_buildConfig(t *testing.T) {
 					Middlewares:       map[string]*dynamic.Middleware{},
 					Services:          map[string]*dynamic.Service{},
 					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "one service with default generated certificate tags",
+			items: []item{
+				{
+					ID:        "id",
+					Node:      "Node1",
+					Name:      "dev/Test",
+					Address:   "127.0.0.1",
+					Port:      9999,
+					ExtraConf: configuration{Enable: true},
+					Tags: []string{
+						"traefik.tls.stores.default.defaultgeneratedcert.resolver = foobar",
+						"traefik.tls.stores.default.defaultgeneratedcert.domain.main = foobar",
+						"traefik.tls.stores.default.defaultgeneratedcert.domain.sans = foobar, fiibar",
+					},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers: map[string]*dynamic.Router{
+						"dev-Test": {
+							Service:     "dev-Test",
+							Rule:        "Host(`dev-Test.traefik.test`)",
+							DefaultRule: true,
+						},
+					},
+					Middlewares: map[string]*dynamic.Middleware{},
+					Services: map[string]*dynamic.Service{
+						"dev-Test": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers: []dynamic.Server{
+									{
+										URL: "http://127.0.0.1:9999",
+									},
+								},
+								PassHostHeader: pointer(true),
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: ptypes.Duration(100 * time.Millisecond),
+								},
+							},
+						},
+					},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{
+						"default": {
+							DefaultGeneratedCert: &tls.GeneratedCert{
+								Resolver: "foobar",
+								Domain: &types.Domain{
+									Main: "foobar",
+									SANs: []string{"foobar", "fiibar"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			p := new(Provider)
+			p.SetDefaults()
+			p.DefaultRule = "Host(`{{ normalize .Name }}.traefik.test`)"
+			p.Constraints = test.constraints
+			err := p.Init()
+			require.NoError(t, err)
+
+			ctx := context.TODO()
+			c := p.buildConfig(ctx, test.items)
+			require.Equal(t, test.expected, c)
+		})
+	}
+}
+
+func Test_buildConfigAllowEmptyServicesTrue(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		items       []item
+		constraints string
+		expected    *dynamic.Configuration
+	}{
+		{
+			desc: "empty service http",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.enable=true",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers: map[string]*dynamic.Router{
+						"Test": {
+							Service:     "Test",
+							Rule:        "Host(`Test.traefik.test`)",
+							DefaultRule: true,
+						},
+					},
+					Middlewares: map[string]*dynamic.Middleware{},
+					Services: map[string]*dynamic.Service{
+						"Test": {
+							LoadBalancer: &dynamic.ServersLoadBalancer{
+								Servers:        nil,
+								PassHostHeader: pointer(true),
+								ResponseForwarding: &dynamic.ResponseForwarding{
+									FlushInterval: ptypes.Duration(100 * time.Millisecond),
+								},
+							},
+						},
+					},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "empty service tcp",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.tcp.routers.test.rule = HostSNI(`foobar`)",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers: map[string]*dynamic.TCPRouter{
+						"test": {
+							Rule:    "HostSNI(`foobar`)",
+							Service: "Test",
+						},
+					},
+					Middlewares: map[string]*dynamic.TCPMiddleware{},
+					Services: map[string]*dynamic.TCPService{
+						"Test": {
+							LoadBalancer: &dynamic.TCPServersLoadBalancer{},
+						},
+					},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "empty service udp",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.udp.routers.test.entrypoints = udp",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers: map[string]*dynamic.UDPRouter{
+						"test": {
+							EntryPoints: []string{"udp"},
+							Service:     "Test",
+						},
+					},
+					Services: map[string]*dynamic.UDPService{
+						"Test": {
+							LoadBalancer: &dynamic.UDPServersLoadBalancer{},
+						},
+					},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			p := new(Provider)
+			p.SetDefaults()
+			p.AllowEmptyServices = true
+			p.DefaultRule = "Host(`{{ normalize .Name }}.traefik.test`)"
+			p.Constraints = test.constraints
+			err := p.Init()
+			require.NoError(t, err)
+
+			ctx := context.TODO()
+			c := p.buildConfig(ctx, test.items)
+			require.Equal(t, test.expected, c)
+		})
+	}
+}
+
+func Test_buildConfigAllowEmptyServicesFalseDefault(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		items       []item
+		constraints string
+		expected    *dynamic.Configuration
+	}{
+		{
+			desc: "empty service http",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.enable=true",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "empty service tcp",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.tcp.routers.test.rule = HostSNI(`foobar`)",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
+				},
+			},
+		},
+		{
+			desc: "empty service udp",
+			items: []item{
+				{
+					ID:   "id1",
+					Name: "Test",
+					Tags: []string{
+						"traefik.udp.routers.test.entrypoints = udp",
+					},
+					Address:   "",
+					Port:      -1,
+					ExtraConf: configuration{Enable: true},
+				},
+			},
+			expected: &dynamic.Configuration{
+				TCP: &dynamic.TCPConfiguration{
+					Routers:           map[string]*dynamic.TCPRouter{},
+					Middlewares:       map[string]*dynamic.TCPMiddleware{},
+					Services:          map[string]*dynamic.TCPService{},
+					ServersTransports: map[string]*dynamic.TCPServersTransport{},
+				},
+				UDP: &dynamic.UDPConfiguration{
+					Routers:  map[string]*dynamic.UDPRouter{},
+					Services: map[string]*dynamic.UDPService{},
+				},
+				HTTP: &dynamic.HTTPConfiguration{
+					Routers:           map[string]*dynamic.Router{},
+					Middlewares:       map[string]*dynamic.Middleware{},
+					Services:          map[string]*dynamic.Service{},
+					ServersTransports: map[string]*dynamic.ServersTransport{},
+				},
+				TLS: &dynamic.TLSConfiguration{
+					Stores: map[string]tls.Store{},
 				},
 			},
 		},
@@ -2691,8 +3422,6 @@ func TestNamespaces(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		test := test
-
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -2713,5 +3442,4 @@ func extractNamespacesFromProvider(providers []*Provider) []string {
 	return res
 }
 
-func Int(v int) *int    { return &v }
-func Bool(v bool) *bool { return &v }
+func pointer[T any](v T) *T { return &v }

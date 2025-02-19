@@ -84,7 +84,8 @@ func TestNewConfigurationWatcher(t *testing.T) {
 				th.WithRouters(
 					th.WithRouter("test@mock",
 						th.WithEntryPoints("e"),
-						th.WithServiceName("scv"))),
+						th.WithServiceName("scv"),
+						th.WithObservability())),
 				th.WithMiddlewares(),
 				th.WithLoadBalancerServices(),
 			),
@@ -175,7 +176,7 @@ func TestIgnoreTransientConfiguration(t *testing.T) {
 
 	expectedConfig := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
-			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"))),
+			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"), th.WithObservability())),
 			th.WithLoadBalancerServices(th.WithService("bar@mock")),
 			th.WithMiddlewares(),
 		),
@@ -200,7 +201,7 @@ func TestIgnoreTransientConfiguration(t *testing.T) {
 
 	expectedConfig3 := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
-			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"))),
+			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"), th.WithObservability())),
 			th.WithLoadBalancerServices(th.WithService("bar-config3@mock")),
 			th.WithMiddlewares(),
 		),
@@ -311,7 +312,7 @@ func TestListenProvidersThrottleProviderConfigReload(t *testing.T) {
 		throttleDuration: 30 * time.Millisecond,
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		pvd.messages = append(pvd.messages, dynamic.Message{
 			ProviderName: "mock",
 			Configuration: &dynamic.Configuration{
@@ -323,7 +324,7 @@ func TestListenProvidersThrottleProviderConfigReload(t *testing.T) {
 		})
 	}
 
-	providerAggregator := aggregator.ProviderAggregator{}
+	providerAggregator := &aggregator.ProviderAggregator{}
 	err := providerAggregator.AddProvider(pvd)
 	assert.NoError(t, err)
 
@@ -345,7 +346,7 @@ func TestListenProvidersThrottleProviderConfigReload(t *testing.T) {
 	// To load 5 new configs it would require 150ms (5 configs * 30ms).
 	// In 100ms, we should only have time to load 3 configs.
 	assert.LessOrEqual(t, publishedConfigCount, 3, "config was applied too many times")
-	assert.Greater(t, publishedConfigCount, 0, "config was not applied at least once")
+	assert.Positive(t, publishedConfigCount, "config was not applied at least once")
 }
 
 func TestListenProvidersSkipsEmptyConfigs(t *testing.T) {
@@ -447,7 +448,7 @@ func TestListenProvidersDoesNotSkipFlappingConfiguration(t *testing.T) {
 
 	expected := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
-			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"))),
+			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"), th.WithObservability())),
 			th.WithLoadBalancerServices(th.WithService("bar@mock")),
 			th.WithMiddlewares(),
 		),
@@ -507,7 +508,7 @@ func TestListenProvidersIgnoreSameConfig(t *testing.T) {
 		},
 	}
 
-	providerAggregator := aggregator.ProviderAggregator{}
+	providerAggregator := &aggregator.ProviderAggregator{}
 	err := providerAggregator.AddProvider(pvd)
 	assert.NoError(t, err)
 
@@ -538,7 +539,7 @@ func TestListenProvidersIgnoreSameConfig(t *testing.T) {
 
 	expected := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
-			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"))),
+			th.WithRouters(th.WithRouter("foo@mock", th.WithEntryPoints("ep"), th.WithObservability())),
 			th.WithLoadBalancerServices(th.WithService("bar@mock")),
 			th.WithMiddlewares(),
 		),
@@ -651,7 +652,7 @@ func TestListenProvidersIgnoreIntermediateConfigs(t *testing.T) {
 		},
 	}
 
-	providerAggregator := aggregator.ProviderAggregator{}
+	providerAggregator := &aggregator.ProviderAggregator{}
 	err := providerAggregator.AddProvider(pvd)
 	assert.NoError(t, err)
 
@@ -674,7 +675,7 @@ func TestListenProvidersIgnoreIntermediateConfigs(t *testing.T) {
 
 	expected := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
-			th.WithRouters(th.WithRouter("final@mock", th.WithEntryPoints("ep"))),
+			th.WithRouters(th.WithRouter("final@mock", th.WithEntryPoints("ep"), th.WithObservability())),
 			th.WithLoadBalancerServices(th.WithService("final@mock")),
 			th.WithMiddlewares(),
 		),
@@ -738,8 +739,8 @@ func TestListenProvidersPublishesConfigForEachProvider(t *testing.T) {
 	expected := dynamic.Configuration{
 		HTTP: th.BuildConfiguration(
 			th.WithRouters(
-				th.WithRouter("foo@mock", th.WithEntryPoints("ep")),
-				th.WithRouter("foo@mock2", th.WithEntryPoints("ep")),
+				th.WithRouter("foo@mock", th.WithEntryPoints("ep"), th.WithObservability()),
+				th.WithRouter("foo@mock2", th.WithEntryPoints("ep"), th.WithObservability()),
 			),
 			th.WithLoadBalancerServices(
 				th.WithService("bar@mock"),

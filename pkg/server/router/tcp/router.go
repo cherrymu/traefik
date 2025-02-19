@@ -8,8 +8,10 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"time"
 
+	"github.com/go-acme/lego/v4/challenge/tlsalpn01"
 	"github.com/rs/zerolog/log"
 	tcpmuxer "github.com/traefik/traefik/v3/pkg/muxer/tcp"
 	"github.com/traefik/traefik/v3/pkg/tcp"
@@ -19,6 +21,8 @@ const defaultBufSize = 4096
 
 // Router is a TCP router.
 type Router struct {
+	acmeTLSPassthrough bool
+
 	// Contains TCP routes.
 	muxerTCP tcpmuxer.Muxer
 	// Contains TCP TLS routes.
@@ -98,6 +102,11 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		// If there is a handler matching the connection metadata,
 		// we let it handle the connection.
 		if handler != nil {
+			// Remove read/write deadline and delegate this to underlying TCP server.
+			if err := conn.SetDeadline(time.Time{}); err != nil {
+				log.Error().Err(err).Msg("Error while setting deadline")
+			}
+
 			handler.ServeTCP(conn)
 			return
 		}
@@ -116,6 +125,11 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	if postgres {
+		// Remove read/write deadline and delegate this to underlying TCP server.
+		if err := conn.SetDeadline(time.Time{}); err != nil {
+			log.Error().Err(err).Msg("Error while setting deadline")
+		}
+
 		r.servePostgres(r.GetConn(conn, getPeeked(br)))
 		return
 	}
@@ -126,15 +140,9 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		return
 	}
 
-	// Remove read/write deadline and delegate this to underlying tcp server (for now only handled by HTTP Server)
-	err = conn.SetReadDeadline(time.Time{})
-	if err != nil {
-		log.Error().Err(err).Msg("Error while setting read deadline")
-	}
-
-	err = conn.SetWriteDeadline(time.Time{})
-	if err != nil {
-		log.Error().Err(err).Msg("Error while setting write deadline")
+	// Remove read/write deadline and delegate this to underlying TCP server (for now only handled by HTTP Server)
+	if err := conn.SetDeadline(time.Time{}); err != nil {
+		log.Error().Err(err).Msg("Error while setting deadline")
 	}
 
 	connData, err := tcpmuxer.NewConnData(hello.serverName, conn, hello.protos)
@@ -154,6 +162,12 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 		default:
 			conn.Close()
 		}
+		return
+	}
+
+	// Handling ACME-TLS/1 challenges.
+	if !r.acmeTLSPassthrough && slices.Contains(hello.protos, tlsalpn01.ACMETLS1Protocol) {
+		r.acmeTLSALPNHandler().ServeTCP(r.GetConn(conn, hello.peeked))
 		return
 	}
 
@@ -199,6 +213,17 @@ func (r *Router) ServeTCP(conn tcp.WriteCloser) {
 	}
 
 	conn.Close()
+}
+
+// acmeTLSALPNHandler returns a special handler to solve ACME-TLS/1 challenges.
+func (r *Router) acmeTLSALPNHandler() tcp.Handler {
+	if r.httpsTLSConfig == nil {
+		return &brokenTLSRouter{}
+	}
+
+	return tcp.HandlerFunc(func(conn tcp.WriteCloser) {
+		_ = tls.Server(conn, r.httpsTLSConfig).Handshake()
+	})
 }
 
 // AddTCPRoute defines a handler for the given rule.
@@ -294,6 +319,10 @@ func (r *Router) SetHTTPSHandler(handler http.Handler, config *tls.Config) {
 	r.httpsTLSConfig = config
 }
 
+func (r *Router) EnableACMETLSPassthrough() {
+	r.acmeTLSPassthrough = true
+}
+
 // Conn is a connection proxy that handles Peeked bytes.
 type Conn struct {
 	// Peeked are the bytes that have been read from Conn for the purposes of route matching,
@@ -334,8 +363,8 @@ func clientHelloInfo(br *bufio.Reader) (*clientHello, error) {
 	hdr, err := br.Peek(1)
 	if err != nil {
 		var opErr *net.OpError
-		if !errors.Is(err, io.EOF) && (!errors.As(err, &opErr) || opErr.Timeout()) {
-			log.Error().Err(err).Msg("Error while Peeking first byte")
+		if !errors.Is(err, io.EOF) && (!errors.As(err, &opErr) || !opErr.Timeout()) {
+			log.Debug().Err(err).Msg("Error while peeking first byte")
 		}
 		return nil, err
 	}
@@ -361,7 +390,7 @@ func clientHelloInfo(br *bufio.Reader) (*clientHello, error) {
 	const recordHeaderLen = 5
 	hdr, err = br.Peek(recordHeaderLen)
 	if err != nil {
-		log.Error().Err(err).Msg("Error while Peeking hello")
+		log.Error().Err(err).Msg("Error while peeking client hello header")
 		return &clientHello{
 			peeked: getPeeked(br),
 		}, nil
@@ -375,7 +404,7 @@ func clientHelloInfo(br *bufio.Reader) (*clientHello, error) {
 
 	helloBytes, err := br.Peek(recordHeaderLen + recLen)
 	if err != nil {
-		log.Error().Err(err).Msg("Error while Hello")
+		log.Error().Err(err).Msg("Error while peeking client hello bytes")
 		return &clientHello{
 			isTLS:  true,
 			peeked: getPeeked(br),
@@ -404,7 +433,7 @@ func clientHelloInfo(br *bufio.Reader) (*clientHello, error) {
 func getPeeked(br *bufio.Reader) string {
 	peeked, err := br.Peek(br.Buffered())
 	if err != nil {
-		log.Error().Err(err).Msg("Could not get anything")
+		log.Error().Err(err).Msg("Error while peeking bytes")
 		return ""
 	}
 	return string(peeked)

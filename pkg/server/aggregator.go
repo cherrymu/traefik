@@ -1,6 +1,9 @@
 package server
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/go-acme/lego/v4/challenge/tlsalpn01"
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
@@ -82,6 +85,9 @@ func mergeConfiguration(configurations dynamic.Configurations, defaultEntryPoint
 			for serviceName, service := range configuration.TCP.Services {
 				conf.TCP.Services[provider.MakeQualifiedName(pvd, serviceName)] = service
 			}
+			for modelName, model := range configuration.TCP.Models {
+				conf.TCP.Models[provider.MakeQualifiedName(pvd, modelName)] = model
+			}
 			for serversTransportName, serversTransport := range configuration.TCP.ServersTransports {
 				conf.TCP.ServersTransports[provider.MakeQualifiedName(pvd, serversTransportName)] = serversTransport
 			}
@@ -98,7 +104,7 @@ func mergeConfiguration(configurations dynamic.Configurations, defaultEntryPoint
 
 		if configuration.TLS != nil {
 			for _, cert := range configuration.TLS.Certificates {
-				if containsACMETLS1(cert.Stores) && pvd != "tlsalpn.acme" {
+				if slices.Contains(cert.Stores, tlsalpn01.ACMETLS1Protocol) && pvd != "tlsalpn.acme" {
 					continue
 				}
 
@@ -127,14 +133,14 @@ func mergeConfiguration(configurations dynamic.Configurations, defaultEntryPoint
 	}
 
 	if len(defaultTLSStoreProviders) > 1 {
-		log.Error().Msgf("Default TLS Stores defined multiple times in %v", defaultTLSOptionProviders)
+		log.Error().Msgf("Default TLS Store defined in multiple providers: %v", defaultTLSStoreProviders)
 		delete(conf.TLS.Stores, tls.DefaultTLSStoreName)
 	}
 
 	if len(defaultTLSOptionProviders) == 0 {
 		conf.TLS.Options[tls.DefaultTLSConfigName] = tls.DefaultTLSOptions
 	} else if len(defaultTLSOptionProviders) > 1 {
-		log.Error().Msgf("Default TLS Options defined multiple times in %v", defaultTLSOptionProviders)
+		log.Error().Msgf("Default TLS Options defined in multiple providers %v", defaultTLSOptionProviders)
 		// We do not set an empty tls.TLS{} as above so that we actually get a "cascading failure" later on,
 		// i.e. routers depending on this missing TLS option will fail to initialize as well.
 		delete(conf.TLS.Options, tls.DefaultTLSConfigName)
@@ -144,52 +150,73 @@ func mergeConfiguration(configurations dynamic.Configurations, defaultEntryPoint
 }
 
 func applyModel(cfg dynamic.Configuration) dynamic.Configuration {
-	if cfg.HTTP == nil || len(cfg.HTTP.Models) == 0 {
-		return cfg
-	}
+	if cfg.HTTP != nil && len(cfg.HTTP.Models) > 0 {
+		rts := make(map[string]*dynamic.Router)
 
-	rts := make(map[string]*dynamic.Router)
+		for name, rt := range cfg.HTTP.Routers {
+			router := rt.DeepCopy()
 
-	for name, rt := range cfg.HTTP.Routers {
-		router := rt.DeepCopy()
+			if !router.DefaultRule && router.RuleSyntax == "" {
+				for modelName, model := range cfg.HTTP.Models {
+					// models cannot be provided by another provider than the internal one.
+					if !strings.HasSuffix(modelName, "@internal") {
+						continue
+					}
+					router.RuleSyntax = model.DefaultRuleSyntax
+					break
+				}
+			}
 
-		if !router.DefaultRule && router.RuleSyntax == "" {
-			for _, model := range cfg.HTTP.Models {
-				router.RuleSyntax = model.DefaultRuleSyntax
-				break
+			eps := router.EntryPoints
+			router.EntryPoints = nil
+
+			for _, epName := range eps {
+				m, ok := cfg.HTTP.Models[epName+"@internal"]
+				if ok {
+					cp := router.DeepCopy()
+
+					cp.EntryPoints = []string{epName}
+
+					if cp.TLS == nil {
+						cp.TLS = m.TLS
+					}
+
+					cp.Middlewares = append(m.Middlewares, cp.Middlewares...)
+
+					if cp.Observability == nil {
+						cp.Observability = &dynamic.RouterObservabilityConfig{}
+					}
+
+					if cp.Observability.AccessLogs == nil {
+						cp.Observability.AccessLogs = m.Observability.AccessLogs
+					}
+
+					if cp.Observability.Metrics == nil {
+						cp.Observability.Metrics = m.Observability.Metrics
+					}
+
+					if cp.Observability.Tracing == nil {
+						cp.Observability.Tracing = m.Observability.Tracing
+					}
+
+					rtName := name
+					if len(eps) > 1 {
+						rtName = epName + "-" + name
+					}
+					rts[rtName] = cp
+				} else {
+					router.EntryPoints = append(router.EntryPoints, epName)
+
+					rts[name] = router
+				}
 			}
 		}
 
-		eps := router.EntryPoints
-		router.EntryPoints = nil
-
-		for _, epName := range eps {
-			m, ok := cfg.HTTP.Models[epName+"@internal"]
-			if ok {
-				cp := router.DeepCopy()
-
-				cp.EntryPoints = []string{epName}
-
-				if cp.TLS == nil {
-					cp.TLS = m.TLS
-				}
-
-				cp.Middlewares = append(m.Middlewares, cp.Middlewares...)
-
-				rtName := name
-				if len(eps) > 1 {
-					rtName = epName + "-" + name
-				}
-				rts[rtName] = cp
-			} else {
-				router.EntryPoints = append(router.EntryPoints, epName)
-
-				rts[name] = router
-			}
-		}
+		cfg.HTTP.Routers = rts
 	}
 
-	cfg.HTTP.Routers = rts
+	// Apply default observability model to HTTP routers.
+	applyDefaultObservabilityModel(cfg)
 
 	if cfg.TCP == nil || len(cfg.TCP.Models) == 0 {
 		return cfg
@@ -197,7 +224,7 @@ func applyModel(cfg dynamic.Configuration) dynamic.Configuration {
 
 	tcpRouters := make(map[string]*dynamic.TCPRouter)
 
-	for _, rt := range cfg.TCP.Routers {
+	for name, rt := range cfg.TCP.Routers {
 		router := rt.DeepCopy()
 
 		if router.RuleSyntax == "" {
@@ -206,6 +233,8 @@ func applyModel(cfg dynamic.Configuration) dynamic.Configuration {
 				break
 			}
 		}
+
+		tcpRouters[name] = router
 	}
 
 	cfg.TCP.Routers = tcpRouters
@@ -213,12 +242,37 @@ func applyModel(cfg dynamic.Configuration) dynamic.Configuration {
 	return cfg
 }
 
-func containsACMETLS1(stores []string) bool {
-	for _, store := range stores {
-		if store == tlsalpn01.ACMETLS1Protocol {
-			return true
+// applyDefaultObservabilityModel applies the default observability model to the configuration.
+// This function is used to ensure that the observability configuration is set for all routers,
+// and make sure it is serialized and available in the API.
+// We could have introduced a "default" model, but it would have been more complex to manage for now.
+// This could be generalized in the future.
+func applyDefaultObservabilityModel(cfg dynamic.Configuration) {
+	if cfg.HTTP != nil {
+		for _, router := range cfg.HTTP.Routers {
+			if router.Observability == nil {
+				router.Observability = &dynamic.RouterObservabilityConfig{
+					AccessLogs: pointer(true),
+					Metrics:    pointer(true),
+					Tracing:    pointer(true),
+				}
+
+				continue
+			}
+
+			if router.Observability.AccessLogs == nil {
+				router.Observability.AccessLogs = pointer(true)
+			}
+
+			if router.Observability.Tracing == nil {
+				router.Observability.Tracing = pointer(true)
+			}
+
+			if router.Observability.Metrics == nil {
+				router.Observability.Metrics = pointer(true)
+			}
 		}
 	}
-
-	return false
 }
+
+func pointer[T any](v T) *T { return &v }

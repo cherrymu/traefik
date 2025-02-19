@@ -93,7 +93,7 @@ The example below is a file provider only version (`yaml`) of what this configur
 ```yaml tab="Static configuration"
 # traefik.yml
 
-entrypoints:
+entryPoints:
   web:
     address: :80
 
@@ -251,3 +251,5 @@ In which case, you should make sure your infrastructure is properly set up for a
 ```shell
 LEGO_DISABLE_CNAME_SUPPORT=true
 ```
+
+{!traefik-for-business-applications.md!}
